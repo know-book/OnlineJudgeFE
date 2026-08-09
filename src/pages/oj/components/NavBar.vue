@@ -92,6 +92,12 @@
     },
     mounted () {
       this.getProfile()
+      if (this.$route.query.oidc_error === 'login_failed') {
+        this.$error(this.$i18n.t('m.OIDCLoginFailed'))
+        const query = Object.assign({}, this.$route.query)
+        delete query.oidc_error
+        this.$router.replace({path: this.$route.path, query})
+      }
     },
     methods: {
       ...mapActions(['getProfile', 'changeModalStatus']),

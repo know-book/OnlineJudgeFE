@@ -187,6 +187,8 @@ export const m = {
   No_Account: 'No account? Register now!',
   Forget_Password: 'Forget Password',
   UserLogin: 'Login',
+  LoginWithAuthentik: 'Login with Authentik',
+  OIDCLoginFailed: 'Authentik login failed. Please try again.',
   Welcome_back: 'Welcome back to OJ',
   // OIRank.vue
   OI_Ranklist: 'OI Ranklist',

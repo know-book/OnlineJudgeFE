@@ -27,6 +27,9 @@ export default {
       data
     })
   },
+  getOidcConfig () {
+    return ajax('oidc/config', 'get')
+  },
   checkUsernameOrEmail (username, email) {
     return ajax('check_username_or_email', 'post', {
       data: {

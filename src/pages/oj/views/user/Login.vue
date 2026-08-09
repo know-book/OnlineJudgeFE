@@ -25,6 +25,13 @@
         :loading="btnLoginLoading">
         {{$t('m.UserLogin')}}
       </Button>
+      <Button
+        v-if="oidcEnabled"
+        type="default"
+        @click="handleOidcLogin"
+        class="btn oidc-btn" long>
+        {{$t('m.LoginWithAuthentik')}}
+      </Button>
       <a v-if="website.allow_register" @click.stop="handleBtnClick('register')">{{$t('m.No_Account')}}</a>
       <a @click.stop="goResetPassword" style="float: right">{{$t('m.Forget_Password')}}</a>
     </div>
@@ -51,6 +58,8 @@
       return {
         tfaRequired: false,
         btnLoginLoading: false,
+        oidcEnabled: false,
+        oidcLoginUrl: '/api/oidc/login',
         formLogin: {
           username: '',
           password: '',
@@ -66,6 +75,13 @@
           ]
         }
       }
+    },
+    mounted () {
+      api.getOidcConfig().then(res => {
+        const config = res.data.data || {}
+        this.oidcEnabled = !!config.enabled
+        this.oidcLoginUrl = config.login_url || '/api/oidc/login'
+      })
     },
     methods: {
       ...mapActions(['changeModalStatus', 'getProfile']),
@@ -91,6 +107,10 @@
             this.btnLoginLoading = false
           })
         })
+      },
+      handleOidcLogin () {
+        const next = this.$route.fullPath || '/'
+        window.location.assign(this.oidcLoginUrl + '?next=' + encodeURIComponent(next))
       },
       goResetPassword () {
         this.changeModalStatus({visible: false})
@@ -122,6 +142,9 @@
       &:last-child {
         margin: 0;
       }
+    }
+    .oidc-btn {
+      color: #515a6e;
     }
   }
 </style>

@@ -187,6 +187,8 @@ export const m = {
   No_Account: '还没账号，立即注册!',
   Forget_Password: '忘记密码',
   UserLogin: '登录',
+  LoginWithAuthentik: '使用 Authentik 登录',
+  OIDCLoginFailed: 'Authentik 登录失败，请稍后再试。',
   Welcome_back: '欢迎回来',
   // OIRank.vue
   OI_Ranklist: 'OI 排名',
