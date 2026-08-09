@@ -41,6 +41,7 @@ export const m = {
   Server: '服务器',
   Port: '端口',
   Email: '邮箱',
+  From_Email: '发件人邮箱',
   Password: '授权码',
   Website_Config: '网站设置',
   Base_Url: '基础 Url',

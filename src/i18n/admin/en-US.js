@@ -41,6 +41,7 @@ export const m = {
   Server: 'Server',
   Port: 'Port',
   Email: 'Email',
+  From_Email: 'From Email',
   Password: 'Password',
   Website_Config: 'Web Config',
   Base_Url: 'Base Url',

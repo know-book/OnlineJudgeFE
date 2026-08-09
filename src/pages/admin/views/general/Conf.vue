@@ -19,6 +19,11 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item :label="$t('m.From_Email')" label-width="90px">
+              <el-input v-model="smtp.from_email" placeholder="From Email Address (Optional)"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item :label="$t('m.Password')" label-width="90px" required>
               <el-input v-model="smtp.password" type="password" placeholder="SMTP Server Password"></el-input>
             </el-form-item>
@@ -103,6 +108,7 @@
           port: 25,
           password: '',
           email: 'email@example.com',
+          from_email: '',
           tls: true
         },
         websiteConfig: {}
