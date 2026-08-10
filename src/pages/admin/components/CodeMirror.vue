@@ -5,6 +5,7 @@
   import { codemirror } from 'vue-codemirror-lite'
   import 'codemirror/mode/clike/clike.js'
   import 'codemirror/mode/python/python.js'
+  import 'codemirror/mode/verilog/verilog.js'
   import 'codemirror/theme/solarized.css'
 
   export default {
