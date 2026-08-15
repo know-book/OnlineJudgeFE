@@ -8,6 +8,8 @@ export const m = {
   Sample_Input: 'Sample Input',
   Sample_Output: 'Sample Output',
   Hint: 'Hint',
+  Reading_Materials: 'Reading Materials',
+  Download_Material: 'Download',
   Source: 'Source',
   Status: 'Status',
   Information: 'Information',

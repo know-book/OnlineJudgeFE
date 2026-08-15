@@ -213,6 +213,14 @@ export default {
       data
     })
   },
+  // 上传指定阅览教材, 返回存放在服务端的路径
+  uploadProblemMaterial (file) {
+    let formData = new FormData()
+    formData.append('file', file)
+    return ajax('admin/problem/material', 'post', {
+      data: formData
+    })
+  },
   createProblem (data) {
     return ajax('admin/problem', 'post', {
       data

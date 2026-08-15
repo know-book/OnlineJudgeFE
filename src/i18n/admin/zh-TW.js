@@ -89,6 +89,11 @@ export const m = {
   Output: '輸出',
   Score: '分數',
   Hint: '提示',
+  Materials: '指定閱覽教材',
+  Upload_Material: '上傳教材',
+  Material_Title: '教材名稱',
+  Material_File: '檔案',
+  Material_Upload_Tip: '支援 pdf / office / 圖片 / zip，單一檔案上限 100MB；pdf 會直接嵌入題目頁面',
   Source: '來源',
   // Contest.vue
   ContestTitle: '標題',

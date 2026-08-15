@@ -150,6 +150,39 @@
         <el-form-item style="margin-top: 20px" :label="$t('m.Hint')">
           <Simditor v-model="problem.hint" placeholder=""></Simditor>
         </el-form-item>
+        <el-form-item :label="$t('m.Materials')">
+          <el-upload
+            action="/api/admin/problem/material"
+            :http-request="uploadMaterial"
+            :disabled="materialUploading"
+            :show-file-list="false">
+            <el-button size="small" type="primary" icon="el-icon-fa-upload" :loading="materialUploading">
+              {{$t('m.Upload_Material')}}
+            </el-button>
+            <div slot="tip" class="el-upload__tip">{{$t('m.Material_Upload_Tip')}}</div>
+          </el-upload>
+          <el-table
+            v-if="problem.materials && problem.materials.length"
+            :data="problem.materials"
+            style="width: 100%">
+            <el-table-column :label="$t('m.Material_Title')">
+              <template slot-scope="scope">
+                <el-input size="small" :placeholder="$t('m.Material_Title')" v-model="scope.row.title"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('m.Material_File')">
+              <template slot-scope="scope">
+                <a :href="scope.row.file_path" target="_blank" rel="noopener">{{scope.row.file_name}}</a>
+              </template>
+            </el-table-column>
+            <el-table-column width="100" align="center">
+              <template slot-scope="scope">
+                <el-button size="small" type="warning" icon="el-icon-delete"
+                           @click="deleteMaterial(scope.$index)"></el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-form-item>
         <el-form-item :label="$t('m.Code_Template')">
           <el-row>
             <el-col :span="24" v-for="(v, k) in template" :key="'template'+k">
@@ -298,6 +331,7 @@
           io_mode: {'io_mode': 'Standard IO', 'input': 'input.txt', 'output': 'output.txt'}
         },
         testCaseUploaded: false,
+        materialUploading: false,
         allLanguage: {},
         inputVisible: false,
         tagInput: '',
@@ -346,6 +380,7 @@
           rule_type: 'ACM',
           hint: '',
           source: '',
+          materials: [],
           io_mode: {'io_mode': 'Standard IO', 'input': 'input.txt', 'output': 'output.txt'}
         }
         let contestID = this.$route.params.contestId
@@ -373,6 +408,8 @@
               data.spj_code = ''
             }
             data.spj_language = data.spj_language || 'C'
+            // 旧题目没有这个字段
+            data.materials = data.materials || []
             this.problem = data
             this.testCaseUploaded = true
           })
@@ -481,6 +518,23 @@
       },
       uploadFailed () {
         this.$error('Upload failed')
+      },
+      uploadMaterial (item) {
+        this.materialUploading = true
+        api.uploadProblemMaterial(item.file).then(res => {
+          let data = res.data.data
+          this.problem.materials.push({
+            title: data.file_name,
+            file_name: data.file_name,
+            file_path: data.file_path
+          })
+          this.materialUploading = false
+        }).catch(() => {
+          this.materialUploading = false
+        })
+      },
+      deleteMaterial (index) {
+        this.problem.materials.splice(index, 1)
       },
       compileSPJ () {
         let data = {

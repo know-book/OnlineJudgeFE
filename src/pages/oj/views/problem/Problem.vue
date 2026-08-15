@@ -34,6 +34,30 @@
             </div>
           </div>
 
+          <div v-if="problem.materials && problem.materials.length" class="materials">
+            <Collapse v-model="openedPanels">
+              <CollapsePanel name="materials">
+                {{$t('m.Reading_Materials')}}
+                <div slot="content">
+                  <div class="material" v-for="(material, index) of problem.materials" :key="index">
+                    <p class="material-title">
+                      <Icon type="document-text"></Icon>
+                      {{material.title || material.file_name}}
+                      <a class="material-download" :href="material.file_path" target="_blank" rel="noopener">
+                        <Icon type="android-download"></Icon>
+                        {{$t('m.Download_Material')}}
+                      </a>
+                    </p>
+                    <!-- 只在展开后才加载 pdf, 避免没人看的时候也去下载文件 -->
+                    <iframe v-if="materialsOpened && isPDF(material)"
+                            class="material-pdf"
+                            :src="material.file_path"></iframe>
+                  </div>
+                </div>
+              </CollapsePanel>
+            </Collapse>
+          </div>
+
           <div v-if="problem.hint">
             <p class="title">{{$t('m.Hint')}}</p>
             <Card dis-hover>
@@ -201,6 +225,7 @@
 
 <script>
   import {mapGetters, mapActions} from 'vuex'
+  import {Collapse} from 'iview'
   import {types} from '../../../../store'
   import CodeMirror from '@oj/components/CodeMirror.vue'
   import storage from '@/utils/storage'
@@ -215,7 +240,9 @@
   export default {
     name: 'Problem',
     components: {
-      CodeMirror
+      CodeMirror,
+      // iview 的 Panel 在入口处被 @oj/components/Panel.vue 覆盖了, 这里单独注册折叠面板
+      CollapsePanel: Collapse.Panel
     },
     mixins: [FormMixin],
     data () {
@@ -234,6 +261,7 @@
         theme: 'solarized',
         submissionId: '',
         submitted: false,
+        openedPanels: [],
         result: {
           result: 9
         },
@@ -248,6 +276,7 @@
             username: ''
           },
           tags: [],
+          materials: [],
           io_mode: {'io_mode': 'Standard IO'}
         },
         pie: pie,
@@ -344,6 +373,9 @@
         })
         largePieData.push({name: 'AC', value: acCount})
         this.largePie.series[0].data = largePieData
+      },
+      isPDF (material) {
+        return /\.pdf$/i.test(material.file_path)
       },
       handleRoute (route) {
         this.$router.push(route)
@@ -477,6 +509,9 @@
       contestEnded () {
         return this.contestStatus === CONTEST_STATUS.ENDED
       },
+      materialsOpened () {
+        return this.openedPanels.indexOf('materials') > -1
+      },
       submissionStatus () {
         return {
           text: JUDGE_STATUS[this.result.result]['name'],
@@ -557,6 +592,34 @@
         align-self: stretch;
         border-style: solid;
         background: transparent;
+      }
+    }
+    .materials {
+      margin: 25px 20px 0 0;
+      .material {
+        &:not(:first-child) {
+          margin-top: 20px;
+        }
+        &-title {
+          font-size: 15px;
+          margin-bottom: 8px;
+        }
+        &-download {
+          margin-left: 12px;
+          font-size: 13px;
+        }
+        &-pdf {
+          width: 100%;
+          height: 700px;
+          max-height: 75vh;
+          border: 1px solid #dddee1;
+        }
+        // 手机上内嵌 pdf 基本没法用(iOS Safari 只显示第一页且不能滚动), 让用户走上面的下载链接
+        @media screen and (max-width: 768px) {
+          &-pdf {
+            display: none;
+          }
+        }
       }
     }
   }
