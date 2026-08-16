@@ -1,5 +1,11 @@
 <template>
   <div class="flex-container">
+    <!--
+      Every contest child route nests under this component, so mounting the
+      guard here covers the whole contest without restarting the capture when
+      the candidate moves between problems. It moves itself to document.body.
+    -->
+    <ScreenShareGuard v-if="proctorVisible" :loading="!contestLoaded"/>
     <div id="contest-main">
       <!--children-->
       <transition name="fadeInUp">
@@ -80,12 +86,17 @@
   import api from '@oj/api'
   import { mapState, mapGetters, mapActions } from 'vuex'
   import { types } from '@/store'
-  import { CONTEST_STATUS_REVERSE, CONTEST_STATUS } from '@/utils/constants'
+  import { CONTEST_STATUS_REVERSE, CONTEST_STATUS, STORAGE_KEY } from '@/utils/constants'
   import time from '@/utils/time'
+  import storage from '@/utils/storage'
+  import screenShare from '@/utils/screenShare'
+  import ScreenShareGuard from '@oj/components/ScreenShareGuard.vue'
 
   export default {
     name: 'ContestDetail',
-    components: {},
+    components: {
+      ScreenShareGuard
+    },
     data () {
       return {
         CONTEST_STATUS: CONTEST_STATUS,
@@ -169,9 +180,52 @@
         now: state => state.contest.now
       }),
       ...mapGetters(
-        ['contestMenuDisabled', 'contestRuleType', 'contestStatus', 'countdown', 'isContestAdmin',
-          'OIContestRealTimePermission', 'passwordFormVisible']
+        ['contestLoaded', 'contestMenuDisabled', 'contestRuleType', 'contestStatus', 'countdown', 'isContestAdmin',
+          'OIContestRealTimePermission', 'passwordFormVisible', 'isAuthenticated', 'modalStatus']
       ),
+      // Whether this contest is invigilated at all. Drives the teardown, so it
+      // deliberately ignores anything transient — see proctorVisible.
+      proctorRequired () {
+        if (!screenShare.isProctoredHost()) {
+          return false
+        }
+        // getContest() is async and the child route mounts alongside it, and
+        // getProfile() decides both isContestAdmin and isAuthenticated. Shield
+        // the page until both have landed, or the questions are readable for
+        // the couple of hundred ms in between. STORAGE_KEY.AUTHED is written
+        // synchronously on the last profile load, so it tells us a profile is
+        // still on its way rather than absent.
+        let profilePending = !this.isAuthenticated && !!storage.get(STORAGE_KEY.AUTHED)
+        if (!this.contestLoaded || profilePending) {
+          return true
+        }
+        if (this.isContestAdmin) {
+          return false
+        }
+        // Signed out they cannot read the questions anyway, and covering the
+        // page would leave them nowhere to sign in.
+        if (!this.isAuthenticated) {
+          return false
+        }
+        // The private-contest password box lives behind the overlay at the top
+        // of this file, so let them answer it first. contestMenuDisabled
+        // already keeps the questions out of reach until they do.
+        if (this.passwordFormVisible) {
+          return false
+        }
+        // Only while it is actually being sat. Before the start the menu is
+        // disabled anyway; after the end submission is closed and demanding a
+        // screen capture to read solutions would be pure intrusion.
+        return this.contestStatus === CONTEST_STATUS.UNDERWAY
+      },
+      // Whether to show it this instant. Kept separate from proctorRequired so
+      // that stepping aside for the login modal — which api.js pops on any
+      // "Please login" response, and which our z-index would otherwise bury —
+      // does not also stop a perfectly good capture and make the candidate
+      // share their screen again.
+      proctorVisible () {
+        return this.proctorRequired && !this.modalStatus.visible
+      },
       countdownColor () {
         if (this.contestStatus) {
           return CONTEST_STATUS_REVERSE[this.contestStatus].color
@@ -186,10 +240,20 @@
         this.route_name = newVal.name
         this.contestID = newVal.params.contestID
         this.changeDomTitle({title: this.contest.title})
+      },
+      proctorRequired (val) {
+        // The contest ended mid-session, the admin profile arrived late, or we
+        // moved to a contest this user runs. Give the screen back.
+        if (!val) {
+          screenShare.stop()
+        }
       }
     },
     beforeDestroy () {
       clearInterval(this.timer)
+      // Only reached when leaving the contest area entirely — the child routes
+      // share this component. Leaves no "sharing your screen" bar behind.
+      screenShare.stop()
       this.$store.commit(types.CLEAR_CONTEST)
     }
   }
